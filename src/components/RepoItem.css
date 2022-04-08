@@ -9,11 +9,3 @@
   top: 30px;
   right: 0;
 }
-
-.repo-list__display__action {
-  margin-right: 5px;
-}
-
-.repo-list__display__action.is-active {
-  background: #ddd;
-}

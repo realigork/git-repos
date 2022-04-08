@@ -13,6 +13,9 @@
 .repo-list__display__action {
   border: 0;
   border-radius: 0;
-  margin-right: 0px;
   padding: 10px;
+}
+
+.repo-list__display__action.is-active {
+  background: #ddd;
 }
