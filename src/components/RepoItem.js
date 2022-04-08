@@ -17,7 +17,7 @@ function RepoItem(props) {
         className="repo-item__favourite-btn"
         onClick={() => props.toggleFavourite(props.id)}
       >
-        {props.isFavourite ? "Unavourite" : "Favourite"}
+        {props.isFavourite ? "Unfavourite" : "Favourite"}
       </button>
     </div>
   );
