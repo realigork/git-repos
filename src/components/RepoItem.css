@@ -1,0 +1,19 @@
+.repo-item {
+  border-bottom: 1px solid #ccc;
+  padding: 10px 0;
+  position: relative;
+}
+
+.repo-item__favourite-btn {
+  position: absolute;
+  top: 30px;
+  right: 0;
+}
+
+.repo-list__display__action {
+  margin-right: 5px;
+}
+
+.repo-list__display__action.is-active {
+  background: #ddd;
+}
