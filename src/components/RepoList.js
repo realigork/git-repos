@@ -5,17 +5,30 @@ import { fetchRepositories } from "../api/repositories";
 import { getFavouriteItems, setFavouriteItems } from "../utils/localStorage";
 import "./RepoList.css";
 
-const DISPLAY_OPTIONS = {
+const FILTERS = {
+  Filter: "Filter",
+  Sort: "Sort",
+};
+
+const LANGUAGE_OPTIONS = {
   All: "All",
   Favourites: "Favourites",
+};
+
+const SORT_OPTIONS = {
+  Asc: "Ascending",
+  Desc: "Descending",
 };
 
 function RepoList() {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favourites, setFavourites] = useState(getFavouriteItems());
-  const [filters, setFilters] = useState([]);
-  const [currentFilter, setCurrentFilter] = useState(DISPLAY_OPTIONS.All);
+  const [languageFilters, setLanguageFilters] = useState([]);
+  const [currentFilter, setCurrentFilter] = useState({
+    [FILTERS.Filter]: LANGUAGE_OPTIONS.All,
+    [FILTERS.Sort]: undefined,
+  });
 
   useEffect(() => {
     fetchRepositories({ date: getLastWeek() }).then((res) => {
@@ -25,9 +38,9 @@ function RepoList() {
         return element != null && languages.indexOf(element) === index;
       });
 
-      setFilters([
-        DISPLAY_OPTIONS.All,
-        DISPLAY_OPTIONS.Favourites,
+      setLanguageFilters([
+        LANGUAGE_OPTIONS.All,
+        LANGUAGE_OPTIONS.Favourites,
         ...otherFilters,
       ]);
       setRepos(res.items);
@@ -35,10 +48,10 @@ function RepoList() {
     });
   }, []);
 
-  const getFilterClassname = (name) => {
+  const getFilterClassname = (filter, name) => {
     return (
       "repo-list__display__action" +
-      (name === currentFilter ? " is-active" : "")
+      (name === currentFilter[filter] ? " is-active" : "")
     );
   };
 
@@ -69,15 +82,51 @@ function RepoList() {
     setFavourites(items);
   };
 
+  const handleUpdateCurrentFilters = (filter, value) => {
+    // Reset Sort filter when clicking on the active item
+    let filterValue =
+      filter === FILTERS.Sort && currentFilter[filter] === value
+        ? undefined
+        : value;
+    const filters = Object.assign(
+      {},
+      {
+        ...currentFilter,
+        [filter]: filterValue,
+      }
+    );
+
+    setCurrentFilter(filters);
+  };
+
   const renderItems = () => {
     if (!loading && repos?.length) {
       let items;
-      if (currentFilter === DISPLAY_OPTIONS.All) {
-        items = repos;
-      } else if (currentFilter === DISPLAY_OPTIONS.Favourites) {
+      // Get items filtered by language
+      if (currentFilter[FILTERS.Filter] === LANGUAGE_OPTIONS.All) {
+        items = repos.slice(0);
+      } else if (
+        currentFilter[FILTERS.Filter] === LANGUAGE_OPTIONS.Favourites
+      ) {
         items = repos.filter((repo) => isFavourite(repo.id));
       } else {
-        items = repos.filter((repo) => repo.language === currentFilter);
+        items = repos.filter(
+          (repo) => repo.language === currentFilter[FILTERS.Filter]
+        );
+      }
+
+      // Get sorted items
+      switch (currentFilter[FILTERS.Sort]) {
+        case SORT_OPTIONS.Asc:
+          items = items.sort((a, b) => a.stargazers_count - b.stargazers_count);
+          break;
+
+        case SORT_OPTIONS.Desc:
+          items = items.sort((a, b) => b.stargazers_count - a.stargazers_count);
+          break;
+
+        default:
+          break;
       }
 
       return items.map((repo) => (
@@ -97,17 +146,19 @@ function RepoList() {
     <div className="repo-list">
       <div className="repo-list__header">
         <h1>Repos</h1>
-        {filters.length && (
+        {languageFilters.length && (
           <div className="repo-list__display">
             <div>
               <span>
                 <strong>Filter:</strong>{" "}
               </span>
-              {filters.map((item) => (
+              {languageFilters.map((item) => (
                 <button
                   key={item}
-                  className={getFilterClassname(item)}
-                  onClick={() => setCurrentFilter(item)}
+                  className={getFilterClassname(FILTERS.Filter, item)}
+                  onClick={() =>
+                    handleUpdateCurrentFilters(FILTERS.Filter, item)
+                  }
                 >
                   {item}
                 </button>
@@ -115,6 +166,29 @@ function RepoList() {
             </div>
           </div>
         )}
+        <div className="repo-list__display">
+          <div>
+            <span>
+              <strong>Sort:</strong>{" "}
+            </span>
+            <button
+              className={getFilterClassname(FILTERS.Sort, SORT_OPTIONS.Asc)}
+              onClick={() =>
+                handleUpdateCurrentFilters(FILTERS.Sort, SORT_OPTIONS.Asc)
+              }
+            >
+              Ascending
+            </button>
+            <button
+              className={getFilterClassname(FILTERS.Sort, SORT_OPTIONS.Desc)}
+              onClick={() =>
+                handleUpdateCurrentFilters(FILTERS.Sort, SORT_OPTIONS.Desc)
+              }
+            >
+              Descending
+            </button>
+          </div>
+        </div>
       </div>
       {loading && <p>Loading...</p>}
       {renderItems()}
